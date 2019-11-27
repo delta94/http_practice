@@ -6,6 +6,15 @@ import (
 	"net/http"
 )
 
+func CustomMiddleware(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println(r.Method, "요청이 들어왔습니다!")
+
+		next(w, r)
+		return
+	}
+}
+
 func main() {
 	s := net.NewServer()
 
@@ -21,6 +30,8 @@ func main() {
 	s.HandleFunc("GET", "/123", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "asdf")
 	})
+
+	s.Use(CustomMiddleware)
 
 	s.Run(":8090")
 }

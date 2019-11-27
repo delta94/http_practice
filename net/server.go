@@ -31,6 +31,10 @@ func (s *server) Run(addr string) {
 	}
 }
 
+func (s *server) Use (middleware... middleware) {
+	s.middlewares = append(s.middlewares, middleware...)
+}
+
 func (s *server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	s.startHandler(w, req)
 }
