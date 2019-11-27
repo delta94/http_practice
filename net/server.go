@@ -5,11 +5,11 @@ import "net/http"
 type server struct {
 	*router
 	middlewares []middleware
-	startHandler http.HandlerFunc
+	startHandler HandlerFunc
 }
 
 func NewServer() *server {
-	r := &router{map[string]map[string]http.HandlerFunc{}}
+	r := &router{map[string]map[string]HandlerFunc{}}
 	s := &server{router:r}
 	s.middlewares = []middleware{
 		// ... 미들 웨어 추가
@@ -36,5 +36,10 @@ func (s *server) Use (middleware... middleware) {
 }
 
 func (s *server) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	s.startHandler(w, req)
+	c := Context{
+		Params: map[string]interface{}{},
+		ResponseWriter: w,
+		Request:        req,
+	}
+	s.startHandler(&c)
 }

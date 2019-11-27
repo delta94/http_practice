@@ -6,13 +6,13 @@ import (
 )
 
 type router struct {
-	Handlers map[string]map[string]http.HandlerFunc
+	Handlers map[string]map[string]HandlerFunc
 }
 
-func (r *router) HandleFunc(method, pattern string, h http.HandlerFunc) {
+func (r *router) HandleFunc(method, pattern string, h HandlerFunc) {
 	m, ok := r.Handlers[method]
 	if !ok {
-		m := make(map[string]http.HandlerFunc)
+		m := make(map[string]HandlerFunc)
 		r.Handlers[method] = m
 		m[pattern] = h
 	} else {
@@ -20,15 +20,18 @@ func (r *router) HandleFunc(method, pattern string, h http.HandlerFunc) {
 	}
 }
 
-func (r *router) handler() http.HandlerFunc {
-	return func(w http.ResponseWriter, req *http.Request) {
-		for pattern, handler := range r.Handlers[req.Method] {
-			if ok, _ := match(pattern, req.URL.Path); ok {
-				handler(w, req)
+func (r *router) handler() HandlerFunc {
+	return func(c *Context) {
+		for pattern, handler := range r.Handlers[c.Request.Method] {
+			if ok, params := match(pattern, c.Request.URL.Path); ok {
+				for k, v := range params {
+					c.Params[k] = v
+				}
+				handler(c)
 				return
 			}
 		}
-		http.NotFound(w, req)
+		http.NotFound(c.ResponseWriter, c.Request)
 		return
 	}
 }

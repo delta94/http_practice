@@ -6,32 +6,32 @@ import (
 	"time"
 )
 
-type middleware func(http.HandlerFunc) http.HandlerFunc
+type middleware func(next HandlerFunc) HandlerFunc
 
-func LogHandler (next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func LogHandler (next HandlerFunc) HandlerFunc {
+	return func(c *Context) {
 		t := time.Now()
 
-		next(w, r)
+		next(c)
 
 		log.Printf("[%s] %q %v\n",
-			r.Method,
-			r.URL.String(),
+			c.Request.Method,
+			c.Request.URL.String(),
 			time.Now().Sub(t))
 	}
 }
 
-func RecoverHandler (next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func RecoverHandler (next HandlerFunc) HandlerFunc {
+	return func(c *Context) {
 		defer func() {
 			if err:=recover(); err!=nil {
 				log.Printf("panic: %+v", err)
-				http.Error(w,
+				http.Error(c.ResponseWriter,
 					http.StatusText(http.StatusInternalServerError),
 					http.StatusInternalServerError)
 			}
 		}()
-		next(w, r)
+		next(c)
 		return
 	}
 }
